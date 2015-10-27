@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eToro.Utils.Timers", "eToro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eToro.Utils.Timers.Tests", "eToro.Utils.Timers.Tests\eToro.Utils.Timers.Tests.csproj", "{648D6F43-856A-4635-8AB2-5C605BD04F91}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eToro.DDD.Core", "eToro.DDD.Core\eToro.DDD.Core.csproj", "{94D79234-6EF3-4082-8D65-43E0A45272E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eToro.DDD.Core.Tests", "eToro.DDD.Core.Tests\eToro.DDD.Core.Tests.csproj", "{8F6532A3-35F2-4587-94B6-44C1A8A78593}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +29,14 @@ Global
 		{648D6F43-856A-4635-8AB2-5C605BD04F91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{648D6F43-856A-4635-8AB2-5C605BD04F91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{648D6F43-856A-4635-8AB2-5C605BD04F91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94D79234-6EF3-4082-8D65-43E0A45272E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94D79234-6EF3-4082-8D65-43E0A45272E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94D79234-6EF3-4082-8D65-43E0A45272E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94D79234-6EF3-4082-8D65-43E0A45272E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F6532A3-35F2-4587-94B6-44C1A8A78593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F6532A3-35F2-4587-94B6-44C1A8A78593}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F6532A3-35F2-4587-94B6-44C1A8A78593}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F6532A3-35F2-4587-94B6-44C1A8A78593}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,5 +44,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{30538FBB-D2ED-432C-824A-768521C9CC8E} = {DCC38B78-8695-4B82-BFE0-B0070BD27EE7}
 		{648D6F43-856A-4635-8AB2-5C605BD04F91} = {94484DCB-9184-4E0D-9103-429449C5E20D}
+		{94D79234-6EF3-4082-8D65-43E0A45272E2} = {DCC38B78-8695-4B82-BFE0-B0070BD27EE7}
+		{8F6532A3-35F2-4587-94B6-44C1A8A78593} = {94484DCB-9184-4E0D-9103-429449C5E20D}
 	EndGlobalSection
 EndGlobal
