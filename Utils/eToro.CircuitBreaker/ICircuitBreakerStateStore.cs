@@ -16,7 +16,11 @@ namespace eToro.CircuitBreaker
 
         bool IsOpen { get; }
 
+        bool IsExecutionAllowed { get; }
+
         void Trip(Exception ex);
+
+        void Success();
 
         void Reset();
 
