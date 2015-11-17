@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace eToro.CircuitBreaker
 {
-    public class ImMemoryCircuitBreakerStateStore : ICircuitBreakerStateStore, IDisposable
+    public class InMemoryCircuitBreakerStateStore : ICircuitBreakerStateStore, IDisposable
     {
         private int _failureCounter = 0;
         private int _successCounter = 0;
@@ -18,7 +18,7 @@ namespace eToro.CircuitBreaker
         private readonly int _numberOfFailuresRequiredToTransitionToOpenState;
         private readonly int _numberOfSuccessesRequiredToTransitionToClosedState;
 
-        public ImMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 3, int numberOfSuccessesRequiredToTransitionToClosedState = 3, double changeToHalfOpenStateTimeInMilliseconds = 5000)
+        public InMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 3, int numberOfSuccessesRequiredToTransitionToClosedState = 3, double changeToHalfOpenStateTimeInMilliseconds = 5000)
         {
             _numberOfFailuresRequiredToTransitionToOpenState = numberOfFailuresRequiredToTransitionToOpenState;
             _numberOfSuccessesRequiredToTransitionToClosedState = numberOfSuccessesRequiredToTransitionToClosedState;
@@ -51,7 +51,7 @@ namespace eToro.CircuitBreaker
 
         public void Success()
         {
-            if (IsOpen)
+            if (IsHalfOpen)
             {
                 _successCounter++;
                 if (_successCounter > _numberOfSuccessesRequiredToTransitionToClosedState)
@@ -104,7 +104,6 @@ namespace eToro.CircuitBreaker
         {
             get
             {
-
                 if (State == CircuitBreakerState.HalfOpen)
                     return true;
 
@@ -115,7 +114,9 @@ namespace eToro.CircuitBreaker
             }
         }
 
-
-  
+        private bool IsHalfOpen
+        {
+            get { return State == CircuitBreakerState.HalfOpen; }
+        }
     }
 }

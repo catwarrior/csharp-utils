@@ -18,7 +18,7 @@ namespace eToro.CircuitBreaker
             _stateStore = stateStore;
         }
 
-        public CircuiteBreaker() : this(new ImMemoryCircuitBreakerStateStore())
+        public CircuiteBreaker() : this(new InMemoryCircuitBreakerStateStore())
         {
             
         }

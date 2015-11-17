@@ -43,7 +43,7 @@
     <Compile Include="CircuitBreakerState.cs" />
     <Compile Include="CircuiteBreaker.cs" />
     <Compile Include="ICircuiteBreaker.cs" />
-    <Compile Include="ImMemoryCircuitBreakerStateStore.cs" />
+    <Compile Include="InMemoryCircuitBreakerStateStore.cs" />
     <Compile Include="ICircuitBreakerStateStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
