@@ -18,39 +18,33 @@ namespace eToro.CircuitBreaker
         private readonly int _numberOfFailuresRequiredToTransitionToOpenState;
         private readonly int _numberOfSuccessesRequiredToTransitionToClosedState;
 
-        public ImMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 3, int numberOfSuccessesRequiredToTransitionToClosedState = 3, double changeStateTimeInMilliseconds = 5000)
+        public ImMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 3, int numberOfSuccessesRequiredToTransitionToClosedState = 3, double changeToHalfOpenStateTimeInMilliseconds = 5000)
         {
             _numberOfFailuresRequiredToTransitionToOpenState = numberOfFailuresRequiredToTransitionToOpenState;
             _numberOfSuccessesRequiredToTransitionToClosedState = numberOfSuccessesRequiredToTransitionToClosedState;
-            _timer.Interval = changeStateTimeInMilliseconds;
+            _timer.Interval = changeToHalfOpenStateTimeInMilliseconds;
             _timer.Enabled = false;
             _timer.Elapsed += (sender, args) => HalfOpen();
         }
 
         public CircuitBreakerState State { get; private set; }
 
-        public Exception LastException { get; private set; }
-        
-        public DateTime LastStateChangedDateUtc { get; private set; }
-
         public bool IsOpen
         {
             get { return State == CircuitBreakerState.Open; }
         }
 
-        public void Trip(Exception ex)
+        public Exception LastException { get; private set; }
+
+        public void Error(Exception exception)
         {
-            LastException = ex;
+            LastException = exception;
 
             _failureCounter++;
 
-            if (State == CircuitBreakerState.HalfOpen || _failureCounter >= _numberOfFailuresRequiredToTransitionToOpenState)
+            if (FailureRequiresTransitionToOpenState)
             {
                 State = CircuitBreakerState.Open;
-            }
-
-            if (!_timer.Enabled)
-            {
                 _timer.Enabled = true;
             }
         }
@@ -67,49 +61,21 @@ namespace eToro.CircuitBreaker
             }
         }
 
-        public void Reset()
-        {
-            _timer.Enabled = false;
-            State = CircuitBreakerState.Closed;
-            _failureCounter = 0;
-            _successCounter = 0;
-        }
-
-        public void HalfOpen()
-        {
-            if (State == CircuitBreakerState.Open)
-            {
-                State = CircuitBreakerState.HalfOpen;
-            }
-            else
-            {
-                State = CircuitBreakerState.Closed;
-                Reset();
-            }
-            
-            LastStateChangedDateUtc = DateTime.UtcNow;
-        }
-
         public bool IsExecutionAllowed
         {
             get
             {
                 if (State == CircuitBreakerState.Closed)
-                {
                     return true;
-                }
                 
-                if (State != CircuitBreakerState.Open)
-                {
+                if (State == CircuitBreakerState.Open)
                     return false;
-                }
 
                 var randomValue = _randomizer.Next(1, 100);
-                if (randomValue > 66)
-                {
-                    return false;
-                }
-                return true;
+                if (randomValue >= 66) 
+                    return true;
+                
+                return false;
             }
         }
 
@@ -117,5 +83,39 @@ namespace eToro.CircuitBreaker
         {
             _timer.Dispose();
         }
+
+        private void HalfOpen()
+        {
+            if (State == CircuitBreakerState.Open)
+            {
+                State = CircuitBreakerState.HalfOpen;
+            }
+        }
+
+        private void Reset()
+        {
+            _timer.Enabled = false;
+            State = CircuitBreakerState.Closed;
+            _failureCounter = 0;
+            _successCounter = 0;
+        }
+
+        private bool FailureRequiresTransitionToOpenState
+        {
+            get
+            {
+
+                if (State == CircuitBreakerState.HalfOpen)
+                    return true;
+
+                if (_failureCounter >= _numberOfFailuresRequiredToTransitionToOpenState)
+                    return true;
+                
+                return false;
+            }
+        }
+
+
+  
     }
 }

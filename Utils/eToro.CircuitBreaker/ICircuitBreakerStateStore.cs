@@ -10,20 +10,14 @@ namespace eToro.CircuitBreaker
     {
         CircuitBreakerState State { get; }
 
-        Exception LastException { get; }
-
-        DateTime LastStateChangedDateUtc { get; }
-
         bool IsOpen { get; }
 
         bool IsExecutionAllowed { get; }
 
-        void Trip(Exception ex);
+        Exception LastException { get; }
+
+        void Error(Exception exception);
 
         void Success();
-
-        void Reset();
-
-        void HalfOpen();
     }
 }

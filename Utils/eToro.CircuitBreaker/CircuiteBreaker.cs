@@ -9,21 +9,55 @@ using System.Threading.Tasks;
 
 namespace eToro.CircuitBreaker
 {
-    public class CircuiteBreaker
+    public class CircuiteBreaker : ICircuiteBreaker
     {
-        private readonly ICircuitBreakerStateStore _stateStore = new ImMemoryCircuitBreakerStateStore();
+        private readonly ICircuitBreakerStateStore _stateStore;
 
-        private readonly object _halfOpenSyncObject = new object();
+        public CircuiteBreaker(ICircuitBreakerStateStore stateStore = null)
+        {
+            _stateStore = stateStore;
+        }
+
+        public CircuiteBreaker() : this(new ImMemoryCircuitBreakerStateStore())
+        {
+            
+        }
+
+        public void ExcecuteAction(Action action)
+        {
+            if (_stateStore.IsOpen)
+            {
+                throw new CircuitBreakerOpenException(_stateStore.LastException);
+            }
+
+            try
+            {
+                if (_stateStore.IsExecutionAllowed)
+                {
+                    action();
+                    _stateStore.Success();
+                }
+                else
+                {
+                    throw new CircuitBreakerOpenException(_stateStore.LastException);
+                }
+            }
+            catch (Exception ex)
+            {
+                TrackException(ex);
+                throw;
+            }
+        }
 
         public TResult ExcecuteAction<TResult>(Func<TResult> action)
         {
-            var result = default(TResult);
-            
             if (_stateStore.IsOpen)
             {
-                return result;
+                throw new CircuitBreakerOpenException(_stateStore.LastException);  
             }
             
+            var result = default(TResult);
+
             try
             {
                 if (_stateStore.IsExecutionAllowed)
@@ -33,7 +67,7 @@ namespace eToro.CircuitBreaker
                 }
                 else
                 {
-                    throw new CircuitBreakerOpenException();    
+                    throw new CircuitBreakerOpenException(_stateStore.LastException);    
                 }
             }
             catch (Exception ex)
@@ -47,7 +81,7 @@ namespace eToro.CircuitBreaker
 
         private void TrackException(Exception ex)
         {
-            _stateStore.Trip(ex);
+            _stateStore.Error(ex);
         }
     }
 }
