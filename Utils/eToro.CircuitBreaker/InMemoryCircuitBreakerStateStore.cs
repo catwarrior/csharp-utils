@@ -23,8 +23,9 @@ namespace eToro.CircuitBreaker
             _numberOfFailuresRequiredToTransitionToOpenState = numberOfFailuresRequiredToTransitionToOpenState;
             _numberOfSuccessesRequiredToTransitionToClosedState = numberOfSuccessesRequiredToTransitionToClosedState;
             _timer.Interval = changeToHalfOpenStateTimeInMilliseconds;
-            _timer.Enabled = false;
+            
             _timer.Elapsed += (sender, args) => HalfOpen();
+            _timer.Start();
         }
 
         public CircuitBreakerState State { get; private set; }
@@ -45,7 +46,6 @@ namespace eToro.CircuitBreaker
             if (FailureRequiresTransitionToOpenState)
             {
                 State = CircuitBreakerState.Open;
-                _timer.Enabled = true;
             }
         }
 
@@ -94,7 +94,6 @@ namespace eToro.CircuitBreaker
 
         private void Reset()
         {
-            _timer.Enabled = false;
             State = CircuitBreakerState.Closed;
             _failureCounter = 0;
             _successCounter = 0;
