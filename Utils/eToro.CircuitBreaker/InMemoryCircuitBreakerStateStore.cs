@@ -18,7 +18,7 @@ namespace eToro.CircuitBreaker
         private readonly int _numberOfFailuresRequiredToTransitionToOpenState;
         private readonly int _numberOfSuccessesRequiredToTransitionToClosedState;
 
-        public InMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 3, int numberOfSuccessesRequiredToTransitionToClosedState = 3, double changeToHalfOpenStateTimeInMilliseconds = 5000)
+        public InMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 5, int numberOfSuccessesRequiredToTransitionToClosedState = 5, double changeToHalfOpenStateTimeInMilliseconds = 5000)
         {
             _numberOfFailuresRequiredToTransitionToOpenState = numberOfFailuresRequiredToTransitionToOpenState;
             _numberOfSuccessesRequiredToTransitionToClosedState = numberOfSuccessesRequiredToTransitionToClosedState;
@@ -54,7 +54,7 @@ namespace eToro.CircuitBreaker
             if (IsHalfOpen)
             {
                 _successCounter++;
-                if (_successCounter > _numberOfSuccessesRequiredToTransitionToClosedState)
+                if (_successCounter >= _numberOfSuccessesRequiredToTransitionToClosedState)
                 {
                     Reset();
                 }
