@@ -8,9 +8,9 @@ namespace eToro.CircuitBreaker
 {
     public class CircuitBreakerOpenException : Exception
     {
-        public CircuitBreakerOpenException(Exception lastException) : base(lastException.Message, lastException)
+        public CircuitBreakerOpenException(Exception lastException)
+            : base(lastException.Message, lastException)
         {
-            
         }
     }
 }

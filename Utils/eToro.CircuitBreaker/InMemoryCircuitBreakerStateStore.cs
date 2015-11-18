@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace eToro.CircuitBreaker
 {
@@ -14,18 +16,22 @@ namespace eToro.CircuitBreaker
         
         private readonly Random _randomizer = new Random();
         private readonly Timer _timer = new Timer();
+        private readonly Stopwatch _lastResetStopwatch = new Stopwatch();
 
         private readonly int _numberOfFailuresRequiredToTransitionToOpenState;
         private readonly int _numberOfSuccessesRequiredToTransitionToClosedState;
+        private readonly long _recoveryTimeInMilliseconds;
 
-        public InMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 5, int numberOfSuccessesRequiredToTransitionToClosedState = 5, double changeToHalfOpenStateTimeInMilliseconds = 5000)
+        public InMemoryCircuitBreakerStateStore(int numberOfFailuresRequiredToTransitionToOpenState = 50, int numberOfSuccessesRequiredToTransitionToClosedState = 5, long recoveryTimeInMilliseconds = 5000)
         {
             _numberOfFailuresRequiredToTransitionToOpenState = numberOfFailuresRequiredToTransitionToOpenState;
             _numberOfSuccessesRequiredToTransitionToClosedState = numberOfSuccessesRequiredToTransitionToClosedState;
-            _timer.Interval = changeToHalfOpenStateTimeInMilliseconds;
+            _recoveryTimeInMilliseconds = recoveryTimeInMilliseconds;
+            _timer.Interval = recoveryTimeInMilliseconds;
             
             _timer.Elapsed += (sender, args) => HalfOpen();
             _timer.Start();
+            _lastResetStopwatch.Start();
         }
 
         public CircuitBreakerState State { get; private set; }
@@ -41,9 +47,9 @@ namespace eToro.CircuitBreaker
         {
             LastException = exception;
 
-            _failureCounter++;
+            var localFailureCounter = Interlocked.Increment(ref _failureCounter);
 
-            if (FailureRequiresTransitionToOpenState)
+            if (FailureRequiresTransitionToOpenState(localFailureCounter))
             {
                 State = CircuitBreakerState.Open;
             }
@@ -53,9 +59,21 @@ namespace eToro.CircuitBreaker
         {
             if (IsHalfOpen)
             {
-                _successCounter++;
-                if (_successCounter >= _numberOfSuccessesRequiredToTransitionToClosedState)
+                var localSuccessCounter = Interlocked.Increment(ref _successCounter);
+                if (localSuccessCounter >= _numberOfSuccessesRequiredToTransitionToClosedState)
                 {
+                    Reset();
+                }
+                return;
+            }
+            
+            if (IsClosed)
+            {
+                if (_lastResetStopwatch.ElapsedMilliseconds > _recoveryTimeInMilliseconds)
+                {
+                    // The IsClosed state is stable enough.
+                    // Reset will prevent sporadically occurring failures to creep up, 
+                    // and then result in opening the circuit. 
                     Reset();
                 }
             }
@@ -95,27 +113,30 @@ namespace eToro.CircuitBreaker
         private void Reset()
         {
             State = CircuitBreakerState.Closed;
-            _failureCounter = 0;
-            _successCounter = 0;
+            Interlocked.Exchange(ref _failureCounter, 0);
+            Interlocked.Exchange(ref _successCounter, 0);
+            _lastResetStopwatch.Restart();
         }
 
-        private bool FailureRequiresTransitionToOpenState
+        private bool FailureRequiresTransitionToOpenState(int localFailureCounter)
         {
-            get
-            {
-                if (State == CircuitBreakerState.HalfOpen)
-                    return true;
+            if (State == CircuitBreakerState.HalfOpen)
+                return true;
 
-                if (_failureCounter >= _numberOfFailuresRequiredToTransitionToOpenState)
-                    return true;
+            if (localFailureCounter >= _numberOfFailuresRequiredToTransitionToOpenState)
+                return true;
                 
-                return false;
-            }
+            return false;
         }
 
         private bool IsHalfOpen
         {
             get { return State == CircuitBreakerState.HalfOpen; }
+        }
+
+        private bool IsClosed
+        {
+            get { return State == CircuitBreakerState.Closed; }
         }
     }
 }

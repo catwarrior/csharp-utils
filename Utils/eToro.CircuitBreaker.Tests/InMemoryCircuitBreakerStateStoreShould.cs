@@ -14,11 +14,11 @@ namespace eToro.CircuitBreaker.Tests
     {
         private const int NumberOfFailuresRequiredToTransitionToOpenState = 2;
         private const int NumberOfSuccessesRequiredToTransitionToClosedState = 2;
-        private const int ChangeToHalfOpenStateTimeInMilliseconds = 100;
+        private const int RecoveryTimeInMilliseconds = 100;
 
         private ICircuitBreakerStateStore CreateStateStore()
         {
-            return new InMemoryCircuitBreakerStateStore(NumberOfFailuresRequiredToTransitionToOpenState, NumberOfSuccessesRequiredToTransitionToClosedState, ChangeToHalfOpenStateTimeInMilliseconds);
+            return new InMemoryCircuitBreakerStateStore(NumberOfFailuresRequiredToTransitionToOpenState, NumberOfSuccessesRequiredToTransitionToClosedState, RecoveryTimeInMilliseconds);
         }
 
         [Test]
@@ -86,7 +86,7 @@ namespace eToro.CircuitBreaker.Tests
             stateStore.Error(ex);
 
             // When
-            Thread.Sleep(ChangeToHalfOpenStateTimeInMilliseconds * 2);
+            Thread.Sleep(RecoveryTimeInMilliseconds * 2);
 
             // Then
             stateStore.State.ShouldBe(CircuitBreakerState.HalfOpen);
@@ -101,7 +101,7 @@ namespace eToro.CircuitBreaker.Tests
             stateStore.Error(ex);
             stateStore.Error(ex);
             stateStore.Error(ex);
-            Thread.Sleep(ChangeToHalfOpenStateTimeInMilliseconds * 2);
+            Thread.Sleep(RecoveryTimeInMilliseconds * 2);
 
             // When
             stateStore.Success();
@@ -120,13 +120,30 @@ namespace eToro.CircuitBreaker.Tests
             stateStore.Error(ex);
             stateStore.Error(ex);
             stateStore.Error(ex);
-            Thread.Sleep(ChangeToHalfOpenStateTimeInMilliseconds * 2);
+            Thread.Sleep(RecoveryTimeInMilliseconds * 2);
 
             // When
             stateStore.Success();
 
             // Then
             stateStore.State.ShouldBe(CircuitBreakerState.HalfOpen);
+        }
+
+        [Test]
+        public void ResetCountersGivenIsClosedStateIsStableEnough()
+        {
+            // Given
+            var stateStore = CreateStateStore();
+            stateStore.Error(new Exception());
+            Thread.Sleep(RecoveryTimeInMilliseconds * 2);
+
+            // When
+            stateStore.Success();
+
+            // Then
+            stateStore.State.ShouldBe(CircuitBreakerState.Closed);
+            stateStore.Error(new Exception());
+            stateStore.State.ShouldBe(CircuitBreakerState.Closed);
         }
 
         [Test]
@@ -164,7 +181,7 @@ namespace eToro.CircuitBreaker.Tests
             var stateStore = CreateStateStore();
             stateStore.Error(new Exception());
             stateStore.Error(new Exception());
-            Thread.Sleep(ChangeToHalfOpenStateTimeInMilliseconds * 2);
+            Thread.Sleep(RecoveryTimeInMilliseconds * 2);
 
             // When
             var results = new List<bool>();
